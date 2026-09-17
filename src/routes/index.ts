@@ -1,0 +1,56 @@
+import { Router } from "express";
+
+import userRoutes from "./user.routes";
+import authRoutes from "./auth.routes";
+import serviceRoutes from "./service.routes";
+import mediaRoutes from "./media.routes";
+import branchRoutes from "./branch.routes";
+import cityRoutes from "./city.routes";
+import bookingRoutes from "./booking.routes";
+import couponRoutes from "./coupon.routes";
+import cartRoutes from "./cart.routes";
+import paymentRoutes from "./payment.routes";
+import reviewRoutes from "./review.routes";
+import offerRoutes from "./offer.routes";
+import notificationRoutes from "./notification.routes";
+import pushRoutes from "./push.routes";
+import deviceTokenRoutes from "./device-token.routes";
+import analyticsRoutes from "./analytics.routes";
+import settingsRoutes from "./settings.routes";
+import trashRoutes from "./trash.routes";
+import accountDeletionRoutes from "./account-deletion.routes";
+import bannerRoutes from "./banner.routes";
+import testimonialRoutes from "./testimonial.routes";
+import professionalAuthRoutes from "./professionalAuth.routes";
+import professionalRoutes from "./professional.routes";
+import professionalAdminRoutes from "./professionalAdmin.routes";
+
+const router = Router();
+
+router.use("/user", userRoutes);
+router.use("/auth", authRoutes);
+router.use("/services", serviceRoutes);
+router.use("/media", mediaRoutes);
+router.use("/branches", branchRoutes);
+router.use("/cities", cityRoutes);
+router.use("/bookings", bookingRoutes);
+router.use("/booking", bookingRoutes);
+router.use("/coupons", couponRoutes);
+router.use("/offers", offerRoutes);
+router.use("/cart", cartRoutes);
+router.use("/payments", paymentRoutes);
+router.use("/reviews", reviewRoutes);
+router.use("/notifications", notificationRoutes);
+router.use("/push", pushRoutes);
+router.use("/device-tokens", deviceTokenRoutes);
+router.use("/analytics", analyticsRoutes);
+router.use("/settings", settingsRoutes);
+router.use("/trash", trashRoutes);
+router.use("/account", accountDeletionRoutes);
+router.use("/banners", bannerRoutes);
+router.use("/testimonials", testimonialRoutes);
+router.use("/professional/auth", professionalAuthRoutes);
+router.use("/professional", professionalRoutes);
+router.use("/admin/professionals", professionalAdminRoutes);
+
+export default router;

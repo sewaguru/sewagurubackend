@@ -1,0 +1,1756 @@
+//////////////////////////////////////////////////////
+// GENERATOR
+//////////////////////////////////////////////////////
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+//////////////////////////////////////////////////////
+// ENUMS
+//////////////////////////////////////////////////////
+
+enum Role {
+  USER
+  ADMIN
+  BRANCH_ADMIN
+  SUPER_ADMIN
+  PROFESSIONAL
+}
+
+enum Gender {
+  MALE
+  FEMALE
+  OTHER
+}
+
+enum AuthProvider {
+  PHONE_OTP
+  EMAIL_OTP
+  GOOGLE
+  APPLE
+  GUEST
+}
+
+enum AuthIdentifierType {
+  PHONE
+  EMAIL
+  // Apple's stable per-user, per-app identifier ("sub" claim). Apple only
+  // returns email/name on the user's first-ever authorization, so this is
+  // the only value guaranteed to be present on every subsequent Apple
+  // sign-in and is used as the durable lookup key for that provider.
+  APPLE_SUB
+}
+
+enum AccountDeletionStatus {
+  NONE
+  REQUESTED
+  CANCELLED
+  COMPLETED
+}
+
+enum AccountDeletionReason {
+  NO_LONGER_NEED_APP
+  USING_ANOTHER_SERVICE
+  BAD_EXPERIENCE
+  TOO_MANY_NOTIFICATIONS
+  PRIVACY_CONCERNS
+  DIFFICULT_TO_USE
+  SERVICE_NOT_AVAILABLE
+  OTHER
+}
+
+enum OTPType {
+  LOGIN
+  REGISTER
+  CHECKOUT
+  PHONE_UPDATE
+  ACCOUNT_RECOVERY
+  ACCOUNT_DELETE
+  ADMIN_INVITE
+}
+
+enum AddressLabel {
+  HOME
+  WORK
+  OTHER
+}
+
+enum Weekday {
+  SUNDAY
+  MONDAY
+  TUESDAY
+  WEDNESDAY
+  THURSDAY
+  FRIDAY
+  SATURDAY
+}
+
+enum ServicePriceType {
+  FIXED
+  STARTING_AT
+  INSPECTION
+  TIME_BASED
+  AREA_BASED
+  DISTANCE_BASED
+  PACKAGE_BASED
+  QUANTITY_BASED
+  VARIANT_BASED
+  CUSTOM_QUOTE
+}
+
+enum ServicePricingType {
+  FIXED
+  VARIABLE
+  CONSULTATION
+}
+
+enum ServiceDurationType {
+  FIXED
+  FLEXIBLE
+}
+
+enum PricingRuleType {
+  PER_HOUR
+  PER_UNIT
+  PER_PERSON
+  PER_SQFT
+}
+
+enum ServiceType {
+  CATEGORY
+  GROUP
+  SERVICE
+}
+
+enum ServiceBookingMode {
+  MULTI
+  SINGLE
+}
+
+//////////////////////////////////////////////////////
+// BOOKING STATUS & PAYMENT STATUS
+//////////////////////////////////////////////////////
+
+enum BookingStatus {
+  CREATED
+  PENDING
+  BOOKED
+  CONFIRMED
+  TECHNICIAN_ASSIGNED
+  TECHNICIAN_EN_ROUTE
+  TECHNICIAN_ARRIVED
+  VISIT_SCHEDULED
+  INSPECTION_COMPLETED
+  QUOTE_SENT
+  QUOTE_APPROVED
+  QUOTE_REJECTED
+  IN_PROGRESS
+  WORK_IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  NOT_REQUIRED
+  FAILED
+  REFUNDED
+}
+
+enum PaymentGateway {
+  PHONEPE
+  PAYU
+}
+
+enum CouponDiscountType {
+  PERCENT
+  FLAT
+}
+
+enum OfferDiscountType {
+  PERCENT
+  FLAT
+}
+
+enum NotificationType {
+  BOOKING_CREATED
+  BOOKING_STATUS_UPDATED
+  PAYMENT_STATUS_UPDATED
+  BOOKING_CANCELLED
+  PROMOTIONAL_OFFER
+  COUPON
+  ANNOUNCEMENT
+  TRANSACTIONAL_UPDATE
+  PROFESSIONAL_APPROVED
+  PROFESSIONAL_REJECTED
+  PROFESSIONAL_SUSPENDED
+  PROFESSIONAL_REACTIVATED
+  JOB_OFFER_RECEIVED
+  DISPATCH_NO_PROFESSIONALS
+}
+
+enum NotificationDeliveryChannel {
+  PUSH
+  EMAIL
+  SMS
+  WHATSAPP
+}
+
+enum NotificationDeliveryStatus {
+  SENT
+  FAILED
+  SKIPPED
+}
+
+enum NotificationEvent {
+  USER_SIGNUP_WELCOME
+  BOOKING_CONFIRMATION
+  BOOKING_COMPLETION
+  PAYMENT_CONFIRMATION
+  NOTIFICATION_CAMPAIGN
+}
+
+enum NotificationCampaignStatus {
+  DRAFT
+  SCHEDULED
+  PROCESSING
+  SENT
+  PARTIAL
+  FAILED
+  CANCELLED
+}
+
+enum NotificationAudienceType {
+  ALL_USERS
+  SEGMENT
+  INDIVIDUAL_USERS
+}
+
+enum NotificationAudienceSegment {
+  ACTIVE_LAST_30_DAYS
+  INACTIVE_LAST_30_DAYS
+  USERS_WITHOUT_BOOKINGS
+  USERS_WITH_BOOKINGS
+  RECENT_SIGNUPS
+}
+
+enum NotificationDeliveryState {
+  PENDING
+  DELIVERED
+  FAILED
+  SKIPPED
+}
+
+//////////////////////////////////////////////////////
+// PROFESSIONAL DOMAIN ENUMS
+//////////////////////////////////////////////////////
+
+// Admin-controlled onboarding/compliance state. Kept independent of
+// ProfessionalAvailabilityStatus: a professional can be APPROVED but OFFLINE,
+// or (if suspended) forced OFFLINE regardless of their own toggle.
+enum ProfessionalVerificationStatus {
+  PENDING
+  UNDER_REVIEW
+  APPROVED
+  REJECTED
+  SUSPENDED
+  BLOCKED
+}
+
+// Professional-controlled (or app-driven) real-time state. Never combined
+// with verification status.
+enum ProfessionalAvailabilityStatus {
+  OFFLINE
+  ONLINE
+  BUSY
+}
+
+enum ProfessionalDocumentType {
+  ID_PROOF
+  ADDRESS_PROOF
+  CERTIFICATION
+  POLICE_VERIFICATION
+  PROFILE_PHOTO
+  OTHER
+}
+
+enum ProfessionalDocumentStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum BookingProfessionalOfferStatus {
+  PENDING
+  SENT
+  VIEWED
+  ACCEPTED
+  REJECTED
+  EXPIRED
+  CANCELLED
+}
+
+// Snapshot ledger status. The commission/fee applied is stored as an actual
+// amount on ProfessionalEarning at creation time, never as a rate here.
+enum ProfessionalEarningStatus {
+  PENDING
+  ACCRUED
+  PAYABLE
+  PAID
+  REVERSED
+  CANCELLED
+}
+
+enum PayoutStatus {
+  PENDING
+  PROCESSING
+  PAID
+  FAILED
+  CANCELLED
+}
+
+// Tracks the dispatch/matching engine's progress for a booking, separate
+// from BookingStatus (customer-facing) and ProfessionalVerificationStatus
+// (professional-facing). ASSIGNED is not set by anything in this phase —
+// it's pre-modeled for the acceptance/assignment phase that follows.
+enum DispatchStatus {
+  NOT_DISPATCHED
+  IN_PROGRESS
+  OFFERS_SENT
+  NO_ELIGIBLE_PROFESSIONALS
+  EXPIRED_UNFILLED
+  ASSIGNED
+  CANCELLED
+}
+
+//////////////////////////////////////////////////////
+// USER (ACCOUNT ONLY)
+//////////////////////////////////////////////////////
+
+model User {
+  id String @id @default(cuid())
+
+  role Role @default(USER)
+
+  isActive         Boolean   @default(true)
+  isBlocked        Boolean   @default(false)
+  deletedAt        DateTime?
+  scheduledPurgeAt DateTime?
+
+  deletionRequestedAt      DateTime?
+  deletionScheduledFor     DateTime?
+  deletionCancelledAt      DateTime?
+  deletionCompletedAt      DateTime?
+  deletionStatus           AccountDeletionStatus  @default(NONE)
+  deletionReason           AccountDeletionReason?
+  deletionFeedback         String?
+  deletionRequestIp        String?
+  deletionRequestedDevice  String?
+  cancelledByLogin         Boolean                @default(false)
+  finalDeletionJobStatus   String?
+  finalDeletionJobMetadata Json?
+  finalDeletionAttemptedAt DateTime?
+
+  totalBookings Int       @default(0)
+  lastActiveAt  DateTime?
+
+  profile UserProfile?
+
+  authMethods UserAuth[]
+
+  addresses Address[]
+
+  adminBranches BranchAdmin[]
+
+  identities CustomerIdentity[]
+
+  emailVerificationToken EmailVerificationToken?
+
+  bookings        Booking[]
+  bookingTimeline BookingTimeline[]
+  serviceReviews  ServiceReview[]
+
+  professionalProfile         ProfessionalProfile?
+  professionalVerifications   ProfessionalProfile[]  @relation("ProfessionalVerifiedBy")
+  professionalDocumentReviews ProfessionalDocument[] @relation("ProfessionalDocumentReviewedBy")
+
+  notifications            Notification[]
+  notificationCampaigns    NotificationCampaign[]    @relation("NotificationCampaignCreatedBy")
+  notificationDeliveryLogs NotificationDeliveryLog[]
+  deviceTokens             DeviceToken[]
+
+  carts Cart[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([deletedAt])
+  @@index([scheduledPurgeAt])
+  @@index([deletionStatus, deletionScheduledFor])
+  @@index([deletionReason])
+  @@index([deletionRequestedAt])
+}
+
+model AccountDeletionTombstone {
+  id String @id @default(cuid())
+
+  userId         String
+  identifierType AuthIdentifierType
+  identifierHash String             @unique
+
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([identifierType])
+}
+
+//////////////////////////////////////////////////////
+// USER PROFILE
+//////////////////////////////////////////////////////
+
+model UserProfile {
+  id String @id @default(cuid())
+
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  fullName String
+  email    String? @unique
+  gender   Gender?
+
+  profileImageUrl String?
+  dateOfBirth     DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([fullName])
+}
+
+//////////////////////////////////////////////////////
+// USER AUTH METHODS ⭐⭐⭐
+//////////////////////////////////////////////////////
+
+model UserAuth {
+  id String @id @default(cuid())
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  provider       AuthProvider
+  identifierType AuthIdentifierType
+
+  /// phone OR email
+  identifier String
+
+  isVerified Boolean @default(false)
+  isPrimary  Boolean @default(false)
+
+  createdAt DateTime @default(now())
+
+  @@unique([provider, identifier])
+  @@index([identifier])
+}
+
+//////////////////////////////////////////////////////
+// GUEST / CHECKOUT IDENTITY
+//////////////////////////////////////////////////////
+
+model CustomerIdentity {
+  id String @id @default(cuid())
+
+  phone String?
+  email String?
+
+  userId String?
+  user   User?   @relation(fields: [userId], references: [id])
+
+  isVerified Boolean   @default(false)
+  lastUsedAt DateTime?
+
+  addresses Address[]
+
+  createdAt DateTime @default(now())
+}
+
+//////////////////////////////////////////////////////
+// OTP
+//////////////////////////////////////////////////////
+
+model OTP {
+  id String @id @default(cuid())
+
+  identifier     String
+  identifierType AuthIdentifierType
+
+  codeHash String
+  type     OTPType
+
+  expiresAt DateTime
+  isUsed    Boolean  @default(false)
+
+  createdAt DateTime @default(now())
+
+  @@index([identifier])
+}
+
+//////////////////////////////////////////////////////
+// CITY
+//////////////////////////////////////////////////////
+
+model City {
+  id String @id @default(cuid())
+
+  name    String
+  state   String
+  country String @default("India")
+
+  isActive Boolean @default(true)
+
+  branch    Branch?
+  addresses Address[]
+
+  createdAt DateTime @default(now())
+
+  @@unique([name, state])
+}
+
+//////////////////////////////////////////////////////
+// BRANCH (ONE PER CITY)
+//////////////////////////////////////////////////////
+
+model Branch {
+  id String @id @default(cuid())
+
+  name String
+
+  cityId String @unique
+  city   City   @relation(fields: [cityId], references: [id])
+
+  address String
+  pincode String
+
+  latitude  Float
+  longitude Float
+
+  serviceRadiusKm Float @default(12)
+
+  // Customer cancellation is allowed only if the request is made at least this many minutes before `scheduledAt`.
+  cancellationCutoffMinutes Int @default(60)
+
+  isActive         Boolean   @default(true)
+  deletedAt        DateTime?
+  scheduledPurgeAt DateTime?
+
+  admins          BranchAdmin[]
+  services        BranchService[]
+  bookingSettings BranchBookingSettings?
+  bookingClosures BranchBookingClosure[]
+
+  // Home base a professional registered under, for admin scoping/filtering only.
+  // Does NOT restrict which bookings a professional can be offered — that is
+  // radius-based via ProfessionalProfile.latitude/longitude/serviceRadiusKm.
+  professionals ProfessionalProfile[]
+
+  bookings Booking[]
+
+  carts Cart[]
+
+  coupons Coupon[]
+  offers  Offer[]
+
+  createdAt DateTime @default(now())
+
+  @@index([deletedAt])
+  @@index([scheduledPurgeAt])
+}
+
+model BranchBookingSettings {
+  id String @id @default(cuid())
+
+  branchId String @unique
+  branch   Branch @relation(fields: [branchId], references: [id], onDelete: Cascade)
+
+  timezone            String    @default("Asia/Kolkata")
+  openingTime         String    @default("07:00")
+  closingTime         String    @default("19:00")
+  slotIntervalMinutes Int       @default(60)
+  minLeadMinutes      Int       @default(60)
+  maxAdvanceDays      Int       @default(30)
+  allowBookings       Boolean   @default(true)
+  weeklyOffDays       Weekday[]
+  closedMessage       String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model BranchBookingClosure {
+  id String @id @default(cuid())
+
+  branchId String
+  branch   Branch @relation(fields: [branchId], references: [id], onDelete: Cascade)
+
+  dateKey  String
+  reason   String?
+  isClosed Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([branchId, dateKey])
+  @@index([branchId, dateKey])
+}
+
+//////////////////////////////////////////////////////
+// BRANCH ADMINS
+//////////////////////////////////////////////////////
+
+model BranchAdmin {
+  id String @id @default(cuid())
+
+  userId   String
+  branchId String
+
+  isHead Boolean @default(false)
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  branch Branch @relation(fields: [branchId], references: [id], onDelete: Cascade)
+
+  assignedAt DateTime @default(now())
+
+  @@unique([userId, branchId])
+}
+
+//////////////////////////////////////////////////////
+// ADDRESS
+//////////////////////////////////////////////////////
+
+model Address {
+  id String @id @default(cuid())
+
+  userId String?
+  user   User?   @relation(fields: [userId], references: [id])
+
+  identityId String?
+  identity   CustomerIdentity? @relation(fields: [identityId], references: [id])
+
+  label       AddressLabel @default(HOME)
+  customLabel String?
+
+  contactName  String?
+  contactPhone String?
+
+  addressLine1 String
+  addressLine2 String?
+
+  buildingName String?
+  floor        String?
+  doorNumber   String?
+
+  locality String?
+  landmark String?
+
+  cityId String?
+  city   City?   @relation(fields: [cityId], references: [id])
+
+  state   String?
+  country String  @default("India")
+  pincode String?
+
+  latitude  Float
+  longitude Float
+
+  instructions String?
+
+  isPrimary Boolean @default(false)
+  isActive  Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  bookings Booking[]
+
+  @@index([cityId])
+  @@index([latitude, longitude])
+}
+
+//////////////////////////////////////////////////////
+// SERVICE TREE
+//////////////////////////////////////////////////////
+
+model ServiceNode {
+  id String @id @default(cuid())
+
+  parentId String?
+  parent   ServiceNode?  @relation("ServiceTree", fields: [parentId], references: [id])
+  children ServiceNode[] @relation("ServiceTree")
+
+  name String
+  slug String      @unique
+  type ServiceType
+
+  description String?
+
+  iconUrl  String?
+  coverUrl String?
+
+  gallery ServiceNodeMedia[]
+
+  isBookable  Boolean            @default(false)
+  bookingMode ServiceBookingMode @default(MULTI)
+
+  // Consultation-only services cannot be added to cart; users can only book a consultation/visit.
+  consultationOnly Boolean @default(false)
+
+  durationMinutes           Int?
+  durationType              ServiceDurationType @default(FIXED)
+  defaultPrice              Float?
+  priceType                 ServicePriceType?
+  pricingType               ServicePricingType  @default(FIXED)
+  cancellationCutoffMinutes Int?
+  bookingFields             Json?
+
+  variants     ServiceVariant[]
+  pricingRules PricingRule[]
+
+  sortOrder        Int       @default(0)
+  isActive         Boolean   @default(true)
+  deletedAt        DateTime?
+  scheduledPurgeAt DateTime?
+
+  branchServices       BranchService[]
+  professionalServices ProfessionalService[]
+
+  couponTargets CouponService[]
+  offerTargets  OfferService[]
+
+  bookingItems BookingItem[]
+  cartItems    CartItem[]
+  reviews      ServiceReview[]
+
+  faqs Faq[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([deletedAt])
+  @@index([scheduledPurgeAt])
+}
+
+//////////////////////////////////////////////////////
+// SERVICE FAQ
+//////////////////////////////////////////////////////
+
+model Faq {
+  id String @id @default(cuid())
+
+  question String
+  answer   String
+
+  serviceNodeId String?
+  serviceNode   ServiceNode? @relation(fields: [serviceNodeId], references: [id], onDelete: Cascade)
+
+  sortOrder Int     @default(0)
+  isActive  Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([serviceNodeId])
+  @@index([isActive])
+}
+
+//////////////////////////////////////////////////////
+// BRANCH SERVICE ENABLEMENT
+//////////////////////////////////////////////////////
+
+model BranchService {
+  id String @id @default(cuid())
+
+  branchId      String
+  serviceNodeId String
+
+  branch      Branch      @relation(fields: [branchId], references: [id])
+  serviceNode ServiceNode @relation(fields: [serviceNodeId], references: [id])
+
+  price Float?
+
+  isActive Boolean @default(true)
+
+  createdAt DateTime @default(now())
+
+  @@unique([branchId, serviceNodeId])
+}
+
+//////////////////////////////////////////////////////
+// BOOKINGS
+//////////////////////////////////////////////////////
+
+model Booking {
+  id        String  @id @default(cuid())
+  // Human-friendly booking reference (e.g. SW12345). Optional for older rows.
+  displayId String? @unique
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  branchId String
+  branch   Branch @relation(fields: [branchId], references: [id])
+
+  addressId String?
+  address   Address? @relation(fields: [addressId], references: [id], onDelete: SetNull)
+
+  couponId String?
+  coupon   Coupon? @relation(fields: [couponId], references: [id])
+
+  offerId String?
+  offer   Offer?  @relation(fields: [offerId], references: [id])
+
+  // Professional assignment lives on the booking (not per BookingItem): one
+  // professional performs the whole visit even when it covers multiple
+  // services. Nullable so every existing booking is unaffected.
+  assignedProfessionalId String?
+  assignedProfessional   ProfessionalProfile? @relation("BookingAssignedProfessional", fields: [assignedProfessionalId], references: [id], onDelete: SetNull)
+  assignedAt             DateTime?
+
+  dispatchStatus   DispatchStatus @default(NOT_DISPATCHED)
+  dispatchedAt     DateTime?
+  dispatchAttempts Int            @default(0)
+
+  status           BookingStatus @default(BOOKED)
+  paymentStatus    PaymentStatus @default(PENDING)
+  isActive         Boolean       @default(true)
+  deletedAt        DateTime?
+  scheduledPurgeAt DateTime?
+
+  scheduledAt DateTime
+
+  subtotal    Float
+  taxAmount   Float? @default(0)
+  totalAmount Float
+
+  discountAmount Float? @default(0)
+
+  branchSnapshot  Json?
+  addressSnapshot Json?
+  cartSnapshot    Json?
+
+  notes String?
+
+  items                    BookingItem[]
+  timeline                 BookingTimeline[]
+  notificationDeliveryLogs NotificationDeliveryLog[]
+  paymentOrders            PaymentOrder[]
+  reviews                  ServiceReview[]
+  professionalOffers       BookingProfessionalOffer[]
+  professionalEarnings     ProfessionalEarning[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+  @@index([branchId])
+  @@index([addressId])
+  @@index([couponId])
+  @@index([offerId])
+  @@index([status])
+  @@index([paymentStatus])
+  @@index([isActive])
+  @@index([deletedAt])
+  @@index([scheduledPurgeAt])
+  @@index([scheduledAt])
+  @@index([assignedProfessionalId])
+  @@index([dispatchStatus])
+}
+
+model PlatformSetting {
+  id String @id @default(cuid())
+
+  key String @unique @default("default")
+
+  paymentEnabled                  Boolean        @default(false)
+  allowPayLater                   Boolean        @default(true)
+  activePaymentGateway            PaymentGateway @default(PHONEPE)
+  phonePeFeatureEnabled           Boolean        @default(true)
+  payuFeatureEnabled              Boolean        @default(true)
+  emailNotificationsEnabled       Boolean        @default(true)
+  welcomeEmailEnabled             Boolean        @default(true)
+  welcomeCouponsEnabled           Boolean        @default(true)
+  bookingConfirmationEmailEnabled Boolean        @default(true)
+  bookingCompletionEmailEnabled   Boolean        @default(true)
+  paymentConfirmationEmailEnabled Boolean        @default(true)
+  welcomeCouponCodes              String[]       @default([])
+  emailTemplates                  Json?
+
+  // Global platform commission applied to a professional's earning at the
+  // moment a booking's earning is created. Admin-configurable so it never
+  // needs a code change/redeploy to adjust. Changing this value only
+  // affects earnings created afterwards — it is never applied
+  // retroactively, since each ProfessionalEarning stores its own computed
+  // amounts, not a rate.
+  platformCommissionPercent Float @default(20)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model NotificationDeliveryLog {
+  id String @id @default(cuid())
+
+  channel NotificationDeliveryChannel
+  event   NotificationEvent
+  status  NotificationDeliveryStatus
+
+  recipient    String?
+  subject      String?
+  provider     String?
+  errorMessage String?
+  payload      Json?
+
+  userId String?
+  user   User?   @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  bookingId String?
+  booking   Booking? @relation(fields: [bookingId], references: [id], onDelete: SetNull)
+
+  createdAt DateTime @default(now())
+
+  @@index([channel, event, createdAt])
+  @@index([status, createdAt])
+  @@index([userId])
+  @@index([bookingId])
+}
+
+model PaymentOrder {
+  id String @id @default(cuid())
+
+  bookingId String
+  booking   Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+
+  gateway         PaymentGateway
+  providerOrderId String?        @unique
+  merchantOrderId String         @unique
+
+  state  String
+  amount Int
+
+  rawRequest  Json?
+  rawResponse Json?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([bookingId])
+  @@index([merchantOrderId])
+  @@index([gateway])
+}
+
+model Coupon {
+  id String @id @default(cuid())
+
+  code        String  @unique
+  title       String?
+  description String?
+
+  badge    String?
+  meta     String?
+  imageUrl String?
+
+  isPublic         Boolean @default(true)
+  autoApply        Boolean @default(false)
+  firstBookingOnly Boolean @default(false)
+  minServiceCount  Int?
+
+  branchId String?
+  branch   Branch? @relation(fields: [branchId], references: [id])
+
+  discountType CouponDiscountType
+  value        Float
+
+  maxDiscountAmount Float?
+  minOrderAmount    Float? @default(0)
+
+  isActive  Boolean   @default(true)
+  startsAt  DateTime?
+  expiresAt DateTime?
+
+  bookings       Booking[]
+  serviceTargets CouponService[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([code])
+  @@index([branchId])
+  @@index([isPublic])
+  @@index([autoApply])
+}
+
+model Offer {
+  id String @id @default(cuid())
+
+  title       String
+  description String?
+
+  badge    String?
+  meta     String?
+  imageUrl String?
+
+  branchId String?
+  branch   Branch? @relation(fields: [branchId], references: [id])
+
+  discountType OfferDiscountType
+  value        Float
+
+  maxDiscountAmount Float?
+  minOrderAmount    Float? @default(0)
+
+  isPublic         Boolean @default(true)
+  autoApply        Boolean @default(false)
+  firstBookingOnly Boolean @default(false)
+  minServiceCount  Int?
+
+  isActive  Boolean   @default(true)
+  startsAt  DateTime?
+  expiresAt DateTime?
+
+  serviceTargets OfferService[]
+  bookings       Booking[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([branchId])
+  @@index([isPublic])
+  @@index([autoApply])
+  @@index([isActive])
+}
+
+model OfferService {
+  id String @id @default(cuid())
+
+  offerId       String
+  serviceNodeId String
+
+  offer       Offer       @relation(fields: [offerId], references: [id], onDelete: Cascade)
+  serviceNode ServiceNode @relation(fields: [serviceNodeId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@unique([offerId, serviceNodeId])
+  @@index([offerId])
+  @@index([serviceNodeId])
+}
+
+model CouponService {
+  id String @id @default(cuid())
+
+  couponId      String
+  serviceNodeId String
+
+  coupon      Coupon      @relation(fields: [couponId], references: [id], onDelete: Cascade)
+  serviceNode ServiceNode @relation(fields: [serviceNodeId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@unique([couponId, serviceNodeId])
+  @@index([couponId])
+  @@index([serviceNodeId])
+}
+
+//////////////////////////////////////////////////////
+// HOMEPAGE BANNERS (CMS)
+//////////////////////////////////////////////////////
+
+enum BannerSize {
+  HERO
+  GRID
+  SPOTLIGHT
+}
+
+model Banner {
+  id String @id @default(cuid())
+
+  size BannerSize @default(HERO)
+
+  title    String?
+  subtitle String?
+  ctaLabel String?
+  linkUrl  String?
+  imageUrl String
+
+  sortOrder Int     @default(0)
+  isActive  Boolean @default(true)
+
+  startsAt  DateTime?
+  expiresAt DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([isActive])
+  @@index([sortOrder])
+  @@index([size])
+}
+
+//////////////////////////////////////////////////////
+// HOMEPAGE TESTIMONIALS (CMS)
+//////////////////////////////////////////////////////
+
+model Testimonial {
+  id String @id @default(cuid())
+
+  customerName String
+  customerRole String?
+  avatarUrl    String?
+  quote        String
+  rating       Int?
+
+  sortOrder Int     @default(0)
+  isActive  Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([isActive])
+  @@index([sortOrder])
+}
+
+model BookingItem {
+  id String @id @default(cuid())
+
+  bookingId String
+  booking   Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+
+  serviceNodeId String?
+  serviceNode   ServiceNode? @relation(fields: [serviceNodeId], references: [id], onDelete: SetNull)
+
+  variantId String?
+  variant   ServiceVariant? @relation(fields: [variantId], references: [id], onDelete: SetNull)
+
+  quantity        Float  @default(1)
+  pricingQuantity Float?
+  duration        Float?
+  price           Float
+  lineTotal       Float?
+  inputData       Json?
+  serviceSnapshot Json?
+
+  review ServiceReview?
+
+  createdAt DateTime @default(now())
+
+  @@index([bookingId])
+  @@index([serviceNodeId])
+  @@index([variantId])
+}
+
+model ServiceVariant {
+  id String @id @default(cuid())
+
+  serviceId String
+  service   ServiceNode @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+
+  name      String
+  price     Float
+  sortOrder Int    @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  bookingItems BookingItem[]
+
+  @@unique([serviceId, name])
+  @@index([serviceId])
+}
+
+model PricingRule {
+  id String @id @default(cuid())
+
+  serviceId String
+  service   ServiceNode @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+
+  type      PricingRuleType
+  baseRate  Float
+  sortOrder Int             @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([serviceId])
+}
+
+model ServiceReview {
+  id String @id @default(cuid())
+
+  bookingId String
+  booking   Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+
+  bookingItemId String      @unique
+  bookingItem   BookingItem @relation(fields: [bookingItemId], references: [id], onDelete: Cascade)
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  serviceNodeId String
+  serviceNode   ServiceNode @relation(fields: [serviceNodeId], references: [id], onDelete: Cascade)
+
+  // Snapshot of who actually performed the work, captured when the review is
+  // created. Kept alongside (not instead of) Booking.assignedProfessionalId
+  // so a review stays correct even if assignment data changes later.
+  professionalId String?
+  professional   ProfessionalProfile? @relation("ServiceReviewProfessional", fields: [professionalId], references: [id], onDelete: SetNull)
+
+  rating  Int
+  comment String?
+
+  isVisible Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([bookingId])
+  @@index([userId, createdAt(sort: Desc)])
+  @@index([serviceNodeId, createdAt(sort: Desc)])
+  @@index([professionalId, createdAt(sort: Desc)])
+}
+
+model BookingTimeline {
+  id String @id @default(cuid())
+
+  bookingId String
+  booking   Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+
+  status        BookingStatus?
+  paymentStatus PaymentStatus?
+
+  message String?
+
+  createdById String?
+  createdBy   User?   @relation(fields: [createdById], references: [id])
+
+  createdAt DateTime @default(now())
+
+  @@index([bookingId])
+}
+
+model Notification {
+  id String @id @default(cuid())
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  campaignId String?
+  campaign   NotificationCampaign? @relation(fields: [campaignId], references: [id], onDelete: SetNull)
+
+  type     NotificationType
+  title    String
+  message  String?
+  linkUrl  String?
+  imageUrl String?
+  data     Json?
+
+  deliveryStatus NotificationDeliveryState @default(PENDING)
+  deliveredAt    DateTime?
+  isRead         Boolean                   @default(false)
+  readAt         DateTime?
+  openedAt       DateTime?
+  clickedAt      DateTime?
+
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([userId, isRead, createdAt(sort: Desc)])
+  @@index([campaignId, createdAt(sort: Desc)])
+  @@index([deliveryStatus, createdAt(sort: Desc)])
+}
+
+model NotificationCampaign {
+  id String @id @default(cuid())
+
+  title   String
+  message String
+  type    NotificationType
+
+  audienceType    NotificationAudienceType
+  audienceSegment NotificationAudienceSegment?
+  targetUserIds   String[]                     @default([])
+
+  status NotificationCampaignStatus @default(DRAFT)
+
+  deepLinkPath String?
+  imageUrl     String?
+  data         Json?
+
+  scheduledAt         DateTime?
+  processingStartedAt DateTime?
+  sentAt              DateTime?
+
+  resolvedAudienceCount Int @default(0)
+  deliveredCount        Int @default(0)
+  failedCount           Int @default(0)
+  skippedCount          Int @default(0)
+  openedCount           Int @default(0)
+  clickedCount          Int @default(0)
+
+  lastError String?
+
+  createdById String
+  createdBy   User   @relation("NotificationCampaignCreatedBy", fields: [createdById], references: [id], onDelete: Cascade)
+
+  notifications Notification[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([status, scheduledAt])
+  @@index([createdById, createdAt(sort: Desc)])
+}
+
+//////////////////////////////////////////////////////
+// DEVICE TOKENS (FCM push notifications)
+//////////////////////////////////////////////////////
+
+model DeviceToken {
+  id String @id @default(cuid())
+
+  token      String  @unique
+  platform   String
+  deviceId   String?
+  appVersion String?
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+}
+
+//////////////////////////////////////////////////////
+// CART
+//////////////////////////////////////////////////////
+
+model Cart {
+  id String @id @default(cuid())
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  branchId String
+  branch   Branch @relation(fields: [branchId], references: [id])
+
+  items CartItem[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, branchId])
+  @@index([userId])
+  @@index([branchId])
+}
+
+model CartItem {
+  id String @id @default(cuid())
+
+  cartId String
+  cart   Cart   @relation(fields: [cartId], references: [id], onDelete: Cascade)
+
+  serviceNodeId String
+  serviceNode   ServiceNode @relation(fields: [serviceNodeId], references: [id])
+
+  quantity Int   @default(1)
+  price    Float
+
+  createdAt DateTime @default(now())
+
+  @@index([cartId])
+  @@index([serviceNodeId])
+}
+
+//////////////////////////////////////////////////////
+// EMAIL VERIFICATION TOKEN
+//////////////////////////////////////////////////////
+
+model EmailVerificationToken {
+  id String @id @default(cuid())
+
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  tokenHash String   @unique
+  expiresAt DateTime
+
+  createdAt DateTime @default(now())
+
+  @@index([tokenHash])
+}
+
+//////////////////////////////////////////////////////
+// MEDIA
+//////////////////////////////////////////////////////
+
+//////////////////////////////////////////////////////
+// MEDIA FOLDER (NESTED)
+//////////////////////////////////////////////////////
+
+model MediaFolder {
+  id   String @id @default(cuid())
+  name String
+  slug String
+
+  parentId String?
+
+  parent MediaFolder? @relation("FolderHierarchy", fields: [parentId], references: [id], onDelete: SetNull)
+
+  children MediaFolder[] @relation("FolderHierarchy")
+
+  media Media[]
+
+  createdAt DateTime @default(now())
+}
+
+model Media {
+  id String @id @default(cuid())
+
+  url      String
+  key      String @unique
+  fileName String
+
+  folderId String?
+  folder   MediaFolder? @relation(fields: [folderId], references: [id], onDelete: SetNull)
+
+  mimeType String?
+  size     Int?
+
+  width  Int?
+  height Int?
+
+  createdAt             DateTime               @default(now())
+  serviceGallery        ServiceNodeMedia[]
+  professionalDocuments ProfessionalDocument[]
+}
+
+//////////////////////////////////////////////////////
+// SERVICE NODE MEDIA
+//////////////////////////////////////////////////////
+
+model ServiceNodeMedia {
+  id String @id @default(cuid())
+
+  serviceNodeId String
+  mediaId       String
+
+  serviceNode ServiceNode @relation(fields: [serviceNodeId], references: [id], onDelete: Cascade)
+  media       Media       @relation(fields: [mediaId], references: [id], onDelete: Cascade)
+
+  sortOrder Int @default(0)
+
+  createdAt DateTime @default(now())
+
+  @@unique([serviceNodeId, mediaId])
+  @@index([serviceNodeId])
+  @@index([mediaId])
+}
+
+//////////////////////////////////////////////////////
+// PROFESSIONAL / PARTNER MARKETPLACE (DOMAIN FOUNDATION)
+//////////////////////////////////////////////////////
+//
+// User remains the account/authentication entity. All professional-specific
+// data lives here, one layer out, the same way UserProfile extends User.
+// Professionals reference the EXISTING service catalogue (ServiceNode) and
+// the EXISTING Booking — no parallel catalogue or parallel booking model.
+//////////////////////////////////////////////////////
+
+model ProfessionalProfile {
+  id String @id @default(cuid())
+
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  displayName     String
+  bio             String?
+  profileImageUrl String?
+  experienceYears Int?
+
+  //////////////////////////////////////////////////
+  // VERIFICATION (admin-controlled, separate from availability)
+  //////////////////////////////////////////////////
+  verificationStatus ProfessionalVerificationStatus @default(PENDING)
+  verificationNote   String?
+  verifiedAt         DateTime?
+  verifiedById       String?
+  verifiedBy         User?                          @relation("ProfessionalVerifiedBy", fields: [verifiedById], references: [id], onDelete: SetNull)
+
+  //////////////////////////////////////////////////
+  // AVAILABILITY (professional/app-controlled, separate from verification)
+  //////////////////////////////////////////////////
+  availabilityStatus    ProfessionalAvailabilityStatus @default(OFFLINE)
+  availabilityUpdatedAt DateTime?
+
+  //////////////////////////////////////////////////
+  // LOCATION
+  // Plain Float columns today so this can be backed by a PostGIS geography
+  // column or mirrored into Redis GEO later without a model redesign.
+  //////////////////////////////////////////////////
+  latitude          Float?
+  longitude         Float?
+  locationUpdatedAt DateTime?
+  serviceRadiusKm   Float     @default(10)
+
+  // Home base for admin scoping/filtering ONLY. Does not restrict which
+  // bookings this professional can be offered — matching is radius-based.
+  branchId String?
+  branch   Branch? @relation(fields: [branchId], references: [id], onDelete: SetNull)
+
+  //////////////////////////////////////////////////
+  // JOB STATISTICS (denormalized counters; no calculation logic here)
+  //////////////////////////////////////////////////
+  totalJobsCompleted Int    @default(0)
+  totalJobsCancelled Int    @default(0)
+  averageRating      Float?
+  ratingCount        Int    @default(0)
+
+  isActive         Boolean   @default(true)
+  deletedAt        DateTime?
+  scheduledPurgeAt DateTime?
+
+  services         ProfessionalService[]
+  documents        ProfessionalDocument[]
+  offers           BookingProfessionalOffer[]
+  assignedBookings Booking[]                  @relation("BookingAssignedProfessional")
+  reviews          ServiceReview[]            @relation("ServiceReviewProfessional")
+  earnings         ProfessionalEarning[]
+  bankAccounts     ProfessionalBankAccount[]
+  payouts          Payout[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([verificationStatus])
+  @@index([availabilityStatus])
+  @@index([verificationStatus, availabilityStatus])
+  @@index([latitude, longitude])
+  @@index([branchId])
+  @@index([isActive])
+  @@index([deletedAt])
+  @@index([scheduledPurgeAt])
+}
+
+//////////////////////////////////////////////////////
+// PROFESSIONAL <-> EXISTING SERVICE CATALOGUE
+//////////////////////////////////////////////////////
+
+model ProfessionalService {
+  id String @id @default(cuid())
+
+  professionalId String
+  professional   ProfessionalProfile @relation(fields: [professionalId], references: [id], onDelete: Cascade)
+
+  serviceNodeId String
+  serviceNode   ServiceNode @relation(fields: [serviceNodeId], references: [id], onDelete: Cascade)
+
+  isActive Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([professionalId, serviceNodeId])
+  @@index([professionalId])
+  @@index([serviceNodeId])
+}
+
+//////////////////////////////////////////////////////
+// PROFESSIONAL VERIFICATION DOCUMENTS
+//////////////////////////////////////////////////////
+
+model ProfessionalDocument {
+  id String @id @default(cuid())
+
+  professionalId String
+  professional   ProfessionalProfile @relation(fields: [professionalId], references: [id], onDelete: Cascade)
+
+  type   ProfessionalDocumentType
+  status ProfessionalDocumentStatus @default(PENDING)
+
+  mediaId String?
+  media   Media?  @relation(fields: [mediaId], references: [id], onDelete: SetNull)
+
+  documentNumber String?
+  note           String?
+
+  reviewedById String?
+  reviewedBy   User?     @relation("ProfessionalDocumentReviewedBy", fields: [reviewedById], references: [id], onDelete: SetNull)
+  reviewedAt   DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([professionalId])
+  @@index([type])
+  @@index([status])
+}
+
+//////////////////////////////////////////////////////
+// BOOKING <-> PROFESSIONAL JOB OFFERS
+//////////////////////////////////////////////////////
+// One row per candidate professional per booking. A booking may fan out to
+// many offers; the unique constraint below prevents duplicate offers to the
+// same professional for the same booking. No auto-expiry/matching logic is
+// implemented here — this is the data foundation only.
+//////////////////////////////////////////////////////
+
+model BookingProfessionalOffer {
+  id String @id @default(cuid())
+
+  bookingId String
+  booking   Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+
+  professionalId String
+  professional   ProfessionalProfile @relation(fields: [professionalId], references: [id], onDelete: Cascade)
+
+  status BookingProfessionalOfferStatus @default(PENDING)
+
+  // Which dispatch round this offer belongs to (1 = first batch sent).
+  // Not used for logic — batches are re-derived by excluding professionals
+  // who already have a row for this booking — but useful for observability.
+  batchNumber Int @default(1)
+
+  distanceKm Float?
+
+  sentAt      DateTime?
+  viewedAt    DateTime?
+  respondedAt DateTime?
+  expiresAt   DateTime?
+
+  responseNote String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([bookingId, professionalId])
+  @@index([bookingId])
+  @@index([professionalId])
+  @@index([status])
+  @@index([bookingId, status])
+  @@index([professionalId, status])
+  @@index([expiresAt])
+  @@index([status, expiresAt])
+}
+
+//////////////////////////////////////////////////////
+// PROFESSIONAL EARNINGS (LEDGER FOUNDATION)
+//////////////////////////////////////////////////////
+// One row per (professional, booking). Amounts are actual computed values,
+// never a stored commission rate — calculation logic is out of scope for
+// this phase.
+//////////////////////////////////////////////////////
+
+model ProfessionalEarning {
+  id String @id @default(cuid())
+
+  professionalId String
+  professional   ProfessionalProfile @relation(fields: [professionalId], references: [id], onDelete: Cascade)
+
+  bookingId String
+  booking   Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+
+  grossAmount       Float
+  platformFeeAmount Float @default(0)
+  netAmount         Float
+
+  status ProfessionalEarningStatus @default(PENDING)
+
+  payoutId String?
+  payout   Payout? @relation(fields: [payoutId], references: [id], onDelete: SetNull)
+
+  notes String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([professionalId, bookingId])
+  @@index([professionalId])
+  @@index([bookingId])
+  @@index([status])
+  @@index([professionalId, status])
+  @@index([payoutId])
+}
+
+//////////////////////////////////////////////////////
+// PROFESSIONAL BANK ACCOUNTS
+//////////////////////////////////////////////////////
+// NOTE: accountNumber is stored as plain text at the schema level, matching
+// no existing precedent in this codebase for encrypted-at-rest fields.
+// Application code must mask this value in every API response and should
+// encrypt it at rest before this table holds real professional data.
+//////////////////////////////////////////////////////
+
+model ProfessionalBankAccount {
+  id String @id @default(cuid())
+
+  professionalId String
+  professional   ProfessionalProfile @relation(fields: [professionalId], references: [id], onDelete: Cascade)
+
+  accountHolderName String
+  accountNumber     String
+  ifscCode          String
+  bankName          String?
+  upiId             String?
+
+  isPrimary  Boolean   @default(false)
+  isVerified Boolean   @default(false)
+  verifiedAt DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  payouts Payout[]
+
+  @@index([professionalId])
+  @@index([professionalId, isPrimary])
+}
+
+//////////////////////////////////////////////////////
+// PAYOUTS
+//////////////////////////////////////////////////////
+// Batches one or more ProfessionalEarning rows into a single payment run.
+// Automated processing is out of scope for this phase.
+//////////////////////////////////////////////////////
+
+model Payout {
+  id String @id @default(cuid())
+
+  professionalId String
+  professional   ProfessionalProfile @relation(fields: [professionalId], references: [id], onDelete: Cascade)
+
+  bankAccountId String?
+  bankAccount   ProfessionalBankAccount? @relation(fields: [bankAccountId], references: [id], onDelete: SetNull)
+
+  amount Float
+
+  status PayoutStatus @default(PENDING)
+
+  earnings ProfessionalEarning[]
+
+  reference     String?
+  failureReason String?
+  processedAt   DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([professionalId])
+  @@index([status])
+  @@index([bankAccountId])
+}

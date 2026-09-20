@@ -1,4 +1,4 @@
-import * as admin from "firebase-admin";
+import type { MulticastMessage } from "firebase-admin/messaging";
 import {
   getFirebaseAdminDiagnostics,
   getFirebaseMessaging,
@@ -111,7 +111,7 @@ const getDeviceTokensForUser = async (
 const buildMessage = (
   tokens: string[],
   payload: PushPayload,
-): admin.messaging.MulticastMessage => ({
+): MulticastMessage => ({
   tokens,
   notification: {
     title: payload.title,

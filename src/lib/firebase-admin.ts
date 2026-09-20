@@ -1,4 +1,12 @@
-import * as admin from "firebase-admin";
+import {
+  initializeApp,
+  getApp,
+  getApps,
+  cert,
+  type App,
+  type ServiceAccount,
+} from "firebase-admin/app";
+import { getMessaging, type Messaging } from "firebase-admin/messaging";
 
 export type FirebaseCredentialSource =
   | "SERVICE_ACCOUNT_JSON"
@@ -20,7 +28,7 @@ export type FirebaseAdminDiagnostics = {
   };
 };
 
-let cachedApp: admin.app.App | null = null;
+let cachedApp: App | null = null;
 let initialized = false;
 let lastInitError: string | null = null;
 let warnedConfigIssue = false;
@@ -105,7 +113,7 @@ const buildSplitEnvServiceAccount = () => {
       projectId,
       clientEmail,
       privateKey,
-    } satisfies admin.ServiceAccount,
+    } satisfies ServiceAccount,
     credentialSource: "ENV_FIELDS" as const,
     errorMessage: null,
     projectId,
@@ -169,7 +177,7 @@ const resolveServiceAccount = () => {
           projectId,
           clientEmail,
           privateKey,
-        } satisfies admin.ServiceAccount,
+        } satisfies ServiceAccount,
         credentialSource:
           "SERVICE_ACCOUNT_JSON" as const,
         errorMessage: null,
@@ -220,10 +228,10 @@ const ensureFirebaseAdminApp = () => {
 
   try {
     cachedApp =
-      admin.apps.length > 0
-        ? admin.app()
-        : admin.initializeApp({
-            credential: admin.credential.cert(
+      getApps().length > 0
+        ? getApp()
+        : initializeApp({
+            credential: cert(
               resolved.serviceAccount,
             ),
             projectId:
@@ -255,13 +263,13 @@ const ensureFirebaseAdminApp = () => {
   }
 };
 
-export const getFirebaseMessaging = (): admin.messaging.Messaging | null => {
+export const getFirebaseMessaging = (): Messaging | null => {
   const app = ensureFirebaseAdminApp();
   if (!app) {
     return null;
   }
 
-  return app.messaging();
+  return getMessaging(app);
 };
 
 export const getFirebaseAdminDiagnostics = ({

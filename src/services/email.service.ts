@@ -1,6 +1,6 @@
 import { config } from "../config/config";
 import { AppError } from "../utils/AppError";
-import nodemailer from "nodemailer";
+import nodemailer, { type Transporter } from "nodemailer";
 
 type EmailProvider = "RESEND" | "SMTP" | "LOG";
 
@@ -64,7 +64,7 @@ export const assertEmailProviderReady = (): void => {
 };
 
 let smtpTransport:
-  | nodemailer.Transporter
+  | Transporter
   | null = null;
 
 const getSmtpTransporter = () => {

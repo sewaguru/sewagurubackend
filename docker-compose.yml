@@ -1,6 +1,7 @@
 services:
-  backend:
-    container_name: sewaguru_backend
+  sewagurubackendsand:
+    image: sewagurubackendsand
+    container_name: sewagurubackendsand
     build: .
     restart: unless-stopped
     ports:

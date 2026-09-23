@@ -1,5 +1,7 @@
 # ---------- Builder ----------
-FROM node:20-alpine AS builder
+# jwks-rsa depends on jose@6 (ESM-only); require('jose') only works via
+# Node's native require(esm) support, stable since Node 22.12.
+FROM node:22-alpine AS builder
 
 WORKDIR /app
 
@@ -16,7 +18,7 @@ RUN npm run build
 
 
 # ---------- Runtime ----------
-FROM node:20-alpine
+FROM node:22-alpine
 
 WORKDIR /app
 
